@@ -1,0 +1,21 @@
+{
+  "name": "torrent-blob-store",
+  "version": "0.0.0",
+  "description": "Read-only BitTorrent backed streaming blob store",
+  "main": "index.js",
+  "dependencies": {
+    "duplexify": "^3.1.3",
+    "torrent-stream": "^0.13.5"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mafintosh/torrent-blob-store.git"
+  },
+  "author": "Mathias Buus (@mafintosh)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mafintosh/torrent-blob-store/issues"
+  },
+  "homepage": "https://github.com/mafintosh/torrent-blob-store"
+}
