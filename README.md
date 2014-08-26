@@ -17,7 +17,9 @@ var rs = store.createReadStream({
   index: 1 // get the file at index 1
 })
 
-rs.on('data', console.log) // just log the data
+rs.on('data', function(data) {
+  console.log('received:', data) // data received from peers
+})
 
 rs.on('end', function() {
   console.log('(no more data)')
