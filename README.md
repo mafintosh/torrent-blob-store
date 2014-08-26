@@ -12,6 +12,7 @@ npm install torrent-blob-store
 var torrents = require('torrent-blob-store')
 var store = torrents()
 
+// create a read stream to some star trek fan fiction
 var rs = store.createReadStream({
   link: 'magnet:?xt=urn:btih:ef330b39f4801d25b4245212e75a38634bfc856e',
   index: 1 // get the file at index 1
