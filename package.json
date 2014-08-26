@@ -1,6 +1,6 @@
 {
   "name": "torrent-blob-store",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Read-only BitTorrent backed streaming blob store",
   "main": "index.js",
   "dependencies": {
