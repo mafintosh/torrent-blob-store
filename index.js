@@ -8,6 +8,7 @@ var TorrentBlobs = function(opts) {
 }
 
 TorrentBlobs.prototype.createReadStream = function(opts) {
+  if (typeof opts === 'string') opts = {key:opts}
   var result = duplexify()
 
   this._getFile(opts, function(file) {
@@ -19,12 +20,17 @@ TorrentBlobs.prototype.createReadStream = function(opts) {
 }
 
 TorrentBlobs.prototype.exists = function(opts, cb) {
+  if (typeof opts === 'string') opts = {key:opts}
   this._getFile(opts, function(file) {
     cb(null, !!file)
   })
 }
 
 TorrentBlobs.prototype.createWriteStream = function() {
+  throw new Error('torrent-blob-store is read-only')
+}
+
+TorrentBlobs.prototype.remove = function() {
   throw new Error('torrent-blob-store is read-only')
 }
 
