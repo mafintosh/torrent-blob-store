@@ -8,6 +8,7 @@ var tmpdir = require('osenv').tmpdir();
 var mkdirp = require('mkdirp');
 var once = require('once')
 var xtend = require('xtend')
+var crypto = require('crypto')
 
 var TorrentBlobs = function(opts) {
   if (!(this instanceof TorrentBlobs)) return new TorrentBlobs(opts)
@@ -43,7 +44,7 @@ TorrentBlobs.prototype.createWriteStream = function(opts, cb) {
   if (!opts) opts = {}
   cb = once(cb || function () {})
  
-  var file = opts.path || path.join(tmpdir, opts.name, 'file')
+  var file = opts.path || path.join(tmpdir, opts.name || nonce(16), 'file')
   var result = duplexify()
 
   mkdirp(path.dirname(file), function (err) {
@@ -161,3 +162,5 @@ TorrentBlobs.prototype._addEngine = function(link, e) {
 }
 
 module.exports = TorrentBlobs
+
+function nonce (n) { return crypto.randomBytes(n).toString('hex') }
