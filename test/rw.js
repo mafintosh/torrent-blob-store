@@ -1,4 +1,4 @@
-var test = require('tape');
+var test = require('tape')
 var Tracker = require('bittorrent-tracker').Server
 var blob = require('../')
 var concat = require('concat-stream')
@@ -9,7 +9,7 @@ test('rw', function (t) {
     server.http.close()
     server.udp.close()
   })
- 
+
   var server = new Tracker({ http: true })
   server.listen(0, '127.0.0.1', function () {
     var store = blob({
