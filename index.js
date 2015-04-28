@@ -46,6 +46,7 @@ TorrentBlobs.prototype.createWriteStream = function(opts, cb) {
  
   var file = opts.path || path.join(tmpdir, opts.name || nonce(16), 'file')
   var result = duplexify()
+  if (cb) result.on('error', cb)
 
   mkdirp(path.dirname(file), function (err) {
     if (err) return cb(err)
@@ -76,7 +77,14 @@ TorrentBlobs.prototype.createWriteStream = function(opts, cb) {
     var opts = xtend(self._options, { path: path.dirname(file) })
     var e = (opts.engine || torrents)(tdata, opts)
     var pending = 2
-    e.once('ready', ready)
+    e.once('ready', function () {
+      for (var i = 0; i < e.torrent.pieces.length; i++) {
+        if (!e.bitfield.get(i)) {
+          result.emit('error', new Error('missing files'))
+        }
+      }
+      ready()
+    })
     e.listen(0, ready)
  
     function ready () {
