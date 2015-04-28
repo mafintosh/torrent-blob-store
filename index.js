@@ -1,5 +1,14 @@
 var torrents = require('torrent-stream')
 var duplexify = require('duplexify')
+var createTorrent = require('create-torrent')
+var parseTorrent = require('parse-torrent')
+var fs = require('fs');
+var path = require('path');
+var tmpdir = require('osenv').tmpdir();
+var mkdirp = require('mkdirp')
+var once = require('once')
+var xtend = require('xtend')
+var crypto = require('crypto')
 
 var TorrentBlobs = function(opts) {
   if (!(this instanceof TorrentBlobs)) return new TorrentBlobs(opts)
@@ -26,12 +35,74 @@ TorrentBlobs.prototype.exists = function(opts, cb) {
   })
 }
 
-TorrentBlobs.prototype.createWriteStream = function() {
-  throw new Error('torrent-blob-store is read-only')
+TorrentBlobs.prototype.createWriteStream = function(opts, cb) {
+  var self = this
+  if (typeof opts === 'function') {
+    cb = opts
+    opts = {}
+  }
+  if (!opts) opts = {}
+  cb = once(cb || function () {})
+ 
+  var file = opts.path || path.join(tmpdir, opts.name || nonce(16), 'file')
+  var result = duplexify()
+  if (cb) result.on('error', cb)
+
+  mkdirp(path.dirname(file), function (err) {
+    if (err) return cb(err)
+    var fw = fs.createWriteStream(file)
+    fw.on('error', cb)
+    fw.once('finish', function () {
+      createTorrent(file, opts, ontorrent)
+    })
+    result.setWritable(fw)
+  })
+
+  result.setReadable(false)
+  return result
+
+  function ontorrent(err, tdata) {
+    if (err) return cb(err)
+ 
+    result.torrent = tdata
+    result.torrentInfo = parseTorrent(tdata)
+    result.link = parseTorrent.toMagnetURI(result.torrentInfo)
+    result.key = result.link
+    result.path = file
+ 
+    seed(tdata)
+  }
+
+  function seed (tdata) {
+    var opts = xtend(self._options, { path: path.dirname(file) })
+    var e = (opts.engine || torrents)(tdata, opts)
+    var pending = 2
+    e.once('ready', function () {
+      for (var i = 0; i < e.torrent.pieces.length; i++) {
+        if (!e.bitfield.get(i)) {
+          result.emit('error', new Error('missing files'))
+        }
+      }
+      ready()
+    })
+    e.listen(0, ready)
+ 
+    function ready () {
+      if (-- pending === 0) return
+      self._addEngine(result.link, e)
+      cb(null, result)
+    }
+  }
 }
 
-TorrentBlobs.prototype.remove = function() {
-  throw new Error('torrent-blob-store is read-only')
+TorrentBlobs.prototype.remove = function(opts, cb) {
+  //throw new Error('torrent-blob-store is read-only')
+  if (typeof opts === 'function') {
+    cb = opts
+    opts = {}
+  }
+  if (!opts) opts = {}
+  if (cb) cb(null)
 }
 
 TorrentBlobs.prototype.destroy = function() {
@@ -44,7 +115,7 @@ TorrentBlobs.prototype.destroy = function() {
 TorrentBlobs.prototype._getFile = function(opts, cb) {
   if (!opts.name && !opts.index) opts.index = 0
 
-  var engine = this._getEngine(opts.link)
+  var engine = this._getEngine(opts.link || opts.key)
   var ready = function() {
     for (var i = 0; i < engine.files.length; i++) {
       var file = engine.files[i]
@@ -72,7 +143,14 @@ TorrentBlobs.prototype._getEngine = function(link) {
   if (!link) throw new Error('link is required')
   if (this._engines[link]) return this._engines[link]
 
-  var e = this._engines[link] = torrents(link, this._options)
+  var e = torrents(link, this._options)
+  this._addEngine(link, e)
+  return e
+}
+
+TorrentBlobs.prototype._addEngine = function(link, e) {
+  var self = this
+  this._engines[link] = e
 
   var destroy = function() {
     delete self._engines[link]
@@ -92,3 +170,5 @@ TorrentBlobs.prototype._getEngine = function(link) {
 }
 
 module.exports = TorrentBlobs
+
+function nonce (n) { return crypto.randomBytes(n).toString('hex') }
