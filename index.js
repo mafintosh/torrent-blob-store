@@ -42,6 +42,7 @@ TorrentBlobs.prototype.createWriteStream = function(opts, cb) {
     opts = {}
   }
   if (!opts) opts = {}
+  opts = xtend(this._options, opts)
   cb = once(cb || function () {})
   if (opts.trackers && !opts.announceList) {
     opts.announceList = opts.trackers
