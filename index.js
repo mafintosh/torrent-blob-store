@@ -43,6 +43,10 @@ TorrentBlobs.prototype.createWriteStream = function(opts, cb) {
   }
   if (!opts) opts = {}
   cb = once(cb || function () {})
+  if (opts.trackers && !opts.announceList) {
+    opts.announceList = opts.trackers
+      .map(function (x) { return Array.isArray(x) ? x : [x] })
+  }
  
   var file = opts.path || path.join(tmpdir, opts.name || nonce(16), 'file')
   var result = duplexify()
