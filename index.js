@@ -14,10 +14,14 @@ var TorrentBlobs = function(opts) {
   if (!(this instanceof TorrentBlobs)) return new TorrentBlobs(opts)
   this._options = opts || {}
   this._engines = {}
+  if (this._options.trackers && this._options.tracker === undefined) {
+    this._options.tracker = false
+  }
 }
 
 TorrentBlobs.prototype.createReadStream = function(opts) {
   if (typeof opts === 'string') opts = {key:opts}
+  opts = xtend(this._options, opts)
   var result = duplexify()
 
   this._getFile(opts, function(file) {
@@ -42,7 +46,12 @@ TorrentBlobs.prototype.createWriteStream = function(opts, cb) {
     opts = {}
   }
   if (!opts) opts = {}
+  opts = xtend(this._options, opts)
   cb = once(cb || function () {})
+  if (opts.trackers && !opts.announceList) {
+    opts.announceList = opts.trackers
+      .map(function (x) { return Array.isArray(x) ? x : [x] })
+  }
  
   var file = opts.path || path.join(tmpdir, opts.name || nonce(16), 'file')
   var result = duplexify()
