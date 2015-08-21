@@ -14,6 +14,9 @@ var TorrentBlobs = function(opts) {
   if (!(this instanceof TorrentBlobs)) return new TorrentBlobs(opts)
   this._options = opts || {}
   this._engines = {}
+  if (this._options.trackers && this._options.tracker === undefined) {
+    this._options.tracker = false
+  }
 }
 
 TorrentBlobs.prototype.createReadStream = function(opts) {
