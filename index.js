@@ -18,6 +18,7 @@ var TorrentBlobs = function(opts) {
 
 TorrentBlobs.prototype.createReadStream = function(opts) {
   if (typeof opts === 'string') opts = {key:opts}
+  opts = xtend(this._options, opts)
   var result = duplexify()
 
   this._getFile(opts, function(file) {
