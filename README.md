@@ -1,6 +1,6 @@
 # torrent-blob-store
 
-Read-only BitTorrent backed streaming [blob store](https://github.com/maxogden/abstract-blob-store)
+BitTorrent backed streaming [blob store](https://github.com/maxogden/abstract-blob-store), both read and write supported.
 
 ```
 npm install torrent-blob-store
@@ -31,6 +31,34 @@ rs.on('end', function() {
 
 You can pass in the same options in the blob store constructor as in [torrent-stream](https://github.com/mafintosh/torrent-stream).
 All read streams needs `link` to be set. Currently only magnet links are supported
+
+## Write
+
+Torrent-blob store also lets you createWriteStream and provides you with a magnet link.
+
+```js
+var Tracker = require('bittorrent-tracker').Server
+var blob = require('torrent-blob-store')
+var server = new Tracker({ http: true })
+var concat = require('concat-stream')
+
+server.listen(0, '127.0.0.1', function () {
+  var store = blob({
+    trackers: [
+      'http://localhost:' + server.http.address().port,
+      'udp://localhost:' + server.udp.address().port
+    ]
+  })
+  var w = store.createWriteStream(function (err, res) {
+    console.log(res.link) // will print out the magnet link
+    store.createReadStream(res.link).pipe(concat(function (body) {
+      console.log(body.toString()) // will print 'whatever'
+    }))
+  })
+  w.end('whatever')
+})
+
+```
 
 ## License
 
