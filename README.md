@@ -43,19 +43,19 @@ var server = new Tracker({ http: true })
 var concat = require('concat-stream')
 
 server.listen(0, '127.0.0.1', function () {
-	var store = blob({
+  var store = blob({
     trackers: [
       'http://localhost:' + server.http.address().port,
       'udp://localhost:' + server.udp.address().port
     ]
   })
-	var w = store.createWriteStream(function (err, res) {
-		console.log(res.link) // will print out the magnet link
-	  store.createReadStream(res.link).pipe(concat(function (body) {
-	    console.log(body.toString()) // will print 'whatever'
-	  }))
-	})
-	w.end('whatever')
+  var w = store.createWriteStream(function (err, res) {
+    console.log(res.link) // will print out the magnet link
+    store.createReadStream(res.link).pipe(concat(function (body) {
+      console.log(body.toString()) // will print 'whatever'
+    }))
+  })
+  w.end('whatever')
 })
 
 ```
